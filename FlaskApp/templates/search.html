@@ -1,0 +1,73 @@
+{% extends 'layout.html' %}
+
+{% block title %}
+Table Contents
+{% endblock %}
+
+{% block content %}
+<form id="filterForm">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <br>
+    <label for="columnToFilter">Select Column to Filter:</label>
+    <select id="columnToFilter" name="columnToFilter">
+        {% for column in columns %}
+            <option value="{{ column }}">{{ column }}</option>
+        {% endfor %}
+    </select>
+
+    <label for="filterValue">Filter Value:</label>
+    <input type="text" id="filterValue" name="filterValue">
+
+    <button type="submit">Apply Filter</button>
+</form>
+    <table id="myTable" border="1">
+        <thead>
+            <tr>
+                {% for column in columns %}
+                    <th>{{ column }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in data %}
+                <tr>
+                    {% for column in columns %}
+                        <td>{{ row[column] }}</td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <script>
+        // Zebra-striping rows using JavaScript
+        const rows = document.querySelectorAll("tbody tr");
+        rows.forEach((row, index) => {
+            if (index % 2 === 1) {  // For every other row
+                row.style.backgroundColor = "#f9f9f9";
+            }
+        });
+
+        const filterForm = document.getElementById("filterForm")
+        filterForm.addEventListener("submit", async(e) => {
+            e.preventDefault();
+
+            const columnToFilter = document.getElementById("columnToFilter").value;
+            const filterValue = document.getElementById("filterValue").value;
+            console.log(columnToFilter, filterValue)
+            console.log(document.querySelector('input[name="csrf_token"]').value)
+
+            const requestOptions = {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' ,
+                'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value},
+                body: JSON.stringify({columnToFilter,filterValue})
+            };
+
+            const response = await fetch('/login/search', requestOptions);
+            const data = await response.json();
+            console.log(data,'data')
+
+        })
+    </script>
+{% endblock %}
