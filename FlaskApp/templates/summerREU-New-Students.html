@@ -3,22 +3,117 @@
 {% block title %}Profile{% endblock %}
 
 {% block content %}
-<h2>Profile Page</h2>
-<div>
-    <p>Your account details are below:</p>
-    <table>
-        <tr>
-            <td>Username:</td>
-            <td>{{ account['UserName'] }}</td>
-        </tr>
-        <tr>
-            <td>Password:</td>
-            <td>******</td>
-        </tr>
-        <tr>
-            <td>Email:</td>
-            <td>{{ account['email'] }}</td>
-        </tr>
-    </table>
-</div>
+<h2>New Students</h2>
+<br>
+<form id="student-form" method="post" action="/save-student-info" class="student-form">
+    <div class="form-group">
+        <label for="first_name">First Name:</label>
+        <input type="text" id="first_name" name="first_name" required>
+    </div>
+    
+    <div class="form-group">
+        <label for="mid_name">Middle Name:</label>
+        <input type="text" id="mid_name" name="mid_name">
+    </div>
+
+    <div class="form-group">
+        <label for="last_name">Last Name:</label>
+        <input type="text" id="last_name" name="last_name" required>
+    </div>
+    
+    <div class="form-group">
+        <label for="ethnicity">Ethnicity:</label>
+        <select id="ethnicity" name="ethnicity">
+            <!-- Option values would go here -->
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="gender">Gender:</label>
+        <select id="gender" name="gender">
+            <!-- Option values would go here -->
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="ethnic_details">Ethnic Details:</label>
+        <input type="text" id="ethnic_details" name="ethnic_details">
+    </div>
+
+    <div class="form-group">
+        <label for="birthdate">Birthdate:</label>
+        <input type="date" id="birthdate" name="birthdate">
+    </div>
+
+    <div class="form-group">
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email">
+    </div>
+
+    <div class="form-group">
+        <label for="alt_email">Alternative Email:</label>
+        <input type="email" id="alt_email" name="alt_email">
+    </div>
+
+    <div class="form-group">
+        <label for="country_name">Country Name:</label>
+        <input type="text" id="country_name" name="country_name">
+    </div>
+
+    <div class="form-group">
+        <label for="citizenship_det">Citizenship Details:</label>
+        <input type="text" id="citizenship_det" name="citizenship_det">
+    </div>
+
+   
+    <hr>
+
+    <h3>Current Address</h3>
+
+    <div class="form-group">
+        <label for="current_address">Address:</label>
+        <input type="text" id="current_address" name="current_address">
+    </div>
+
+    <div class="form-group">
+        <label for="current_city">City:</label>
+        <input type="text" id="current_city" name="current_city">
+    </div>
+
+    <div class="form-group">
+        <label for="current_state">State:</label>
+        <input type="text" id="current_state" name="current_state">
+    </div>
+
+    <div class="form-group">
+        <label for="current_country">Country:</label>
+        <input type="text" id="current_country" name="current_country">
+    </div>
+    <hr>
+    <h3>Permanent Address</h3>
+
+    <div class="form-group">
+        <label for="permanent_address">Address:</label>
+        <input type="text" id="permanent_address" name="permanent_address">
+    </div>
+
+    <div class="form-group">
+        <label for="permanent_city">City:</label>
+        <input type="text" id="permanent_city" name="permanent_city">
+    </div>
+
+    <div class="form-group">
+        <label for="permanent_state">State:</label>
+        <input type="text" id="permanent_state" name="permanent_state">
+    </div>
+
+    <div class="form-group">
+        <label for="permanent_country">Country:</label>
+        <input type="text" id="permanent_country" name="permanent_country">
+    </div>
+
+    <button type="submit">Save</button>
+
+
+</form>
 {% endblock %}

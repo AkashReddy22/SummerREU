@@ -56,34 +56,37 @@ def search():
     #     # def get_person_table(self):
     db = Database()
     cursor = db.cur
-    def get_unique_values_for_column(column):
-        cursor = db.cur
-        cursor.execute(f"SELECT DISTINCT {column} FROM Person")
-        return [row[column] for row in cursor.fetchall()]
-    
+
     query = """SELECT * FROM Person p 
                 LEFT JOIN Ethinic e ON p.EthinicityID=e.EthinicID 
                 LEFT JOIN MtbiInfo m ON p.PersonID=m.PersonID 
                 """
     
     print(query)
-    print(request.method)
+    print(request.method,'timatima')
     
     if request.method == 'POST':
         data = request.json
-        column_to_filter = data.get('columnToFilter')
-        filter_value = data.get('filterValue')
-        if column_to_filter and filter_value != None:
-            query += f"WHERE p.{column_to_filter} = %s "
+        print('data:',data)
+        filterValues = data['filterValues']
+        print(filterValues)
+        if filterValues:
+            conditions = []
+            params = []
+            for col, val in filterValues.items():
+                conditions.append(f"p.{col} = %s")
+                params.append(val)
+
+            query += "WHERE " + " AND ".join(conditions)
             print(query)
-            cursor.execute(query, (filter_value,))
+            cursor.execute(query, params)
 
     else:
         query += "ORDER BY GenderID, p.EthinicityID;"
         cursor.execute(query)
 
         
-    print(query)
+    print(query,'timatima2')
     data = cursor.fetchall()
     columns = list(data[0].keys()) if data else []
 
@@ -92,8 +95,9 @@ def search():
 
     if request.method == 'POST':
         return jsonify(data)
-
+    
     return render_template('search.html', data=data, columns=columns)
+
 
     
 

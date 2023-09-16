@@ -5,69 +5,181 @@ Table Contents
 {% endblock %}
 
 {% block content %}
-<form id="filterForm">
+<form id="filterForm" style="margin: 20px;">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <br>
-    <label for="columnToFilter">Select Column to Filter:</label>
-    <select id="columnToFilter" name="columnToFilter">
-        {% for column in columns %}
-            <option value="{{ column }}">{{ column }}</option>
-        {% endfor %}
-    </select>
+    
+    <div class="form-group">
+        <label class="form-label">Select Column(s) to Filter:</label>
+        <!-- Dropdown wrapper -->
+        <div class="dropdown">
+            <button type="button" onclick="toggleDropdown()" class="dropbtn">Select Columns</button>
+            <div id="dropdownContent" class="dropdown-content">
+                {% for column in columns %}
+                    <input type="checkbox" id="{{ column }}" name="columnToFilter" value="{{ column }}" onclick="toggleInput('{{ column }}')">
+                    <label for="{{ column }}">{{ column }}</label>
+                    <br>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    
+    <div id="filterInputs" class="form-group"></div>
+    
+    <div class="form-group">
+        <button type="submit" class="submit-btn">Apply Filter</button>
+    </div>
 
-    <label for="filterValue">Filter Value:</label>
-    <input type="text" id="filterValue" name="filterValue">
+    <div class="form-group">
+        <button type="button" id="resetFilterButton" class="reset-btn">Reset Filter</button>
+    </div>
 
-    <button type="submit">Apply Filter</button>
+    <div id="newTableContainer"></div>
+
 </form>
-    <table id="myTable" border="1">
-        <thead>
+
+
+<table id="myTable" border="1">
+    <thead>
+        <tr>
+            {% for column in columns %}
+                <th>{{ column }}</th>
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in data %}
             <tr>
                 {% for column in columns %}
-                    <th>{{ column }}</th>
+                    <td>{{ row[column] }}</td>
                 {% endfor %}
             </tr>
-        </thead>
-        <tbody>
-            {% for row in data %}
-                <tr>
-                    {% for column in columns %}
-                        <td>{{ row[column] }}</td>
-                    {% endfor %}
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+        {% endfor %}
+    </tbody>
+</table>
 
-    <script>
-        // Zebra-striping rows using JavaScript
-        const rows = document.querySelectorAll("tbody tr");
-        rows.forEach((row, index) => {
-            if (index % 2 === 1) {  // For every other row
-                row.style.backgroundColor = "#f9f9f9";
-            }
+<script>
+    // Zebra-striping rows using JavaScript
+    const rows = document.querySelectorAll("tbody tr");
+    rows.forEach((row, index) => {
+        if (index % 2 === 1) {  // For every other row
+            row.style.backgroundColor = "#f9f9f9";
+        }
+    });
+
+    function toggleDropdown() {
+        const dropdownContent = document.getElementById("dropdownContent");
+        dropdownContent.style.display = dropdownContent.style.display === "block" ? "none" : "block";
+    }
+
+
+    function toggleInput(column) {
+    const inputDiv = document.getElementById('filterInputs');
+    const existingInput = document.getElementById("filter_" + column);
+    if (existingInput) {
+        inputDiv.removeChild(existingInput);
+    } else {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.id = 'filter_' + column;
+        input.name = 'filter_' + column;
+        input.placeholder = 'Filter value for ' + column;
+        inputDiv.appendChild(input);
+    }
+    }
+
+    function resetFilters() {
+        const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach((checkbox) => {
+            checkbox.checked = false;
         });
+        
+        const inputDiv = document.getElementById('filterInputs');
+        while (inputDiv.firstChild) {
+            inputDiv.removeChild(inputDiv.lastChild);
+        }
+        document.getElementById('newTableContainer').innerHTML = '';
+        document.getElementById("myTable").style.display = "table"; // Re-display the original table
+    }
 
-        const filterForm = document.getElementById("filterForm")
-        filterForm.addEventListener("submit", async(e) => {
-            e.preventDefault();
+    // Attach the resetFilters function to the Reset Filter button
+    document.getElementById('resetFilterButton').addEventListener('click', resetFilters);
 
-            const columnToFilter = document.getElementById("columnToFilter").value;
-            const filterValue = document.getElementById("filterValue").value;
-            console.log(columnToFilter, filterValue)
-            console.log(document.querySelector('input[name="csrf_token"]').value)
 
-            const requestOptions = {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' ,
-                'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value},
-                body: JSON.stringify({columnToFilter,filterValue})
-            };
+    console.log(1)
+    
+    const filterForm = document.getElementById("filterForm")
 
-            const response = await fetch('/login/search', requestOptions);
-            const data = await response.json();
-            console.log(data,'data')
+    filterForm.addEventListener("submit", async(e) => {
+    e.preventDefault();
+    
+            const checkboxes = document.querySelectorAll('input[name="columnToFilter"]:checked');
+            const selectedColumns = Array.from(checkboxes).map(checkbox => checkbox.value);
+            
+            let filterValues = {};
+            selectedColumns.forEach(column => {
+                const value = document.getElementById("filter_" + column).value;
+                filterValues[column] = value;
+            });
 
-        })
-    </script>
+            console.log('after submit',selectedColumns,filterValues)
+            
+            if (selectedColumns.length > 0) {
+                const requestOptions = {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json',
+                               'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value },
+                    body: JSON.stringify({ selectedColumns, filterValues })
+                };
+                
+                const response = await fetch('/login/search', requestOptions);
+                const data = await response.json();
+                console.log(data, 'data');
+                document.getElementById("myTable").style.display = "none";
+
+                // clearing the container before each filter
+                document.getElementById('newTableContainer').innerHTML = '';
+
+                // Create a new table and populate it with data
+                const newTable = document.createElement('table');
+                newTable.id = 'newTable';
+                newTable.border = '1';
+
+                // Add table header
+                const thead = document.createElement('thead');
+                const headerRow = document.createElement('tr');
+                for (const column of Object.keys(data[0])) {
+                    const th = document.createElement('th');
+                    th.innerText = column;
+                    headerRow.appendChild(th);
+                }
+                thead.appendChild(headerRow);
+                newTable.appendChild(thead);
+
+                // Add table body
+                const tbody = document.createElement('tbody');
+                for (const row of data) {
+                    const bodyRow = document.createElement('tr');
+                    for (const column of Object.keys(row)) {
+                        const td = document.createElement('td');
+                        td.innerText = row[column];
+                        bodyRow.appendChild(td);
+                    }
+                    tbody.appendChild(bodyRow);
+                }
+                newTable.appendChild(tbody);
+
+                // Append the new table to the specific container
+                document.getElementById('newTableContainer').appendChild(newTable);
+
+            } 
+            
+            else {
+                document.getElementById("myTable").style.display = "table";
+            }
+
+
+});
+
+</script>
 {% endblock %}
