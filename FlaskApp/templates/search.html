@@ -39,7 +39,7 @@ Table Contents
 </form>
 
 
-<table id="myTable" border="1">
+<table id="myTable" class="cell-border stripe order-column hover compact">
     <thead>
         <tr>
             {% for column in columns %}
@@ -58,14 +58,16 @@ Table Contents
     </tbody>
 </table>
 
+<script type="application/json" id="columns-data">
+    {{ columns|tojson }}
+</script>
+
+
+<table id="myTable2" class="cell-border stripe order-column hover compact"></table>
+
+
 <script>
-    // Zebra-striping rows using JavaScript
-    const rows = document.querySelectorAll("tbody tr");
-    rows.forEach((row, index) => {
-        if (index % 2 === 1) {  // For every other row
-            row.style.backgroundColor = "#f9f9f9";
-        }
-    });
+    
 
     function toggleDropdown() {
         const dropdownContent = document.getElementById("dropdownContent");
@@ -74,41 +76,89 @@ Table Contents
 
 
     function toggleInput(column) {
-    const inputDiv = document.getElementById('filterInputs');
-    const existingInput = document.getElementById("filter_" + column);
-    if (existingInput) {
-        inputDiv.removeChild(existingInput);
-    } else {
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.id = 'filter_' + column;
-        input.name = 'filter_' + column;
-        input.placeholder = 'Filter value for ' + column;
-        inputDiv.appendChild(input);
-    }
+            const inputDiv = document.getElementById('filterInputs');
+            const existingInput = document.getElementById("filter_" + column);
+            if (existingInput) {
+                inputDiv.removeChild(existingInput);
+            } else {
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.id = 'filter_' + column;
+                input.name = 'filter_' + column;
+                input.placeholder = 'Filter value for ' + column;
+                inputDiv.appendChild(input);
+            }
     }
 
     function resetFilters() {
-        const checkboxes = document.querySelectorAll('input[type="checkbox"]');
-        checkboxes.forEach((checkbox) => {
-            checkbox.checked = false;
-        });
-        
-        const inputDiv = document.getElementById('filterInputs');
-        while (inputDiv.firstChild) {
-            inputDiv.removeChild(inputDiv.lastChild);
-        }
-        document.getElementById('newTableContainer').innerHTML = '';
-        document.getElementById("myTable").style.display = "table"; // Re-display the original table
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach((checkbox) => {
+                checkbox.checked = false;
+            });
+            
+            const inputDiv = document.getElementById('filterInputs');
+            while (inputDiv.firstChild) {
+                inputDiv.removeChild(inputDiv.lastChild);
+            }
+            const newTable = document.getElementById('myTable2');
+            if ($.fn.DataTable.isDataTable(newTable)) {
+                    $(newTable).DataTable().destroy();
+                }
+            document.getElementById('myTable2').innerHTML = '';
+            document.getElementById("myTable").style.display = "table"; // Re-display the original table
     }
 
     // Attach the resetFilters function to the Reset Filter button
     document.getElementById('resetFilterButton').addEventListener('click', resetFilters);
 
-
     console.log(1)
     
     const filterForm = document.getElementById("filterForm")
+
+    function createTableWithData(data, columns) {
+
+            const newTable = document.getElementById('myTable2');
+
+            // Check if DataTable is already initialized and destroy it
+            if ($.fn.DataTable.isDataTable(newTable)) {
+                $(newTable).DataTable().destroy();
+            }
+
+            // Clear the table content
+            newTable.innerHTML = '';
+
+            // Create and append the header
+            const thead = document.createElement('thead');
+            const headerRow = document.createElement('tr');
+            for (const column of columns) {
+                const th = document.createElement('th');
+                th.innerText = column;
+                headerRow.appendChild(th);
+            }
+            thead.appendChild(headerRow);
+            newTable.appendChild(thead);
+
+            // Create and append the body
+            const tbody = document.createElement('tbody');
+            for (const row of data) {
+                const bodyRow = document.createElement('tr');
+                for (const column of columns) {
+                    const td = document.createElement('td');
+                    td.innerText = row[column] || '';  // Use default empty string if no data
+                    bodyRow.appendChild(td);
+                }
+                tbody.appendChild(bodyRow);
+            }
+            newTable.appendChild(tbody);
+
+            // Initialize the DataTable
+            $(newTable).DataTable({
+        "autoWidth": true,
+        "scrollX":true,
+        "fixedHeader":true
+      });
+}
+
 
     filterForm.addEventListener("submit", async(e) => {
     e.preventDefault();
@@ -135,51 +185,36 @@ Table Contents
                 const response = await fetch('/login/search', requestOptions);
                 const data = await response.json();
                 console.log(data, 'data');
+
                 document.getElementById("myTable").style.display = "none";
 
-                // clearing the container before each filter
-                document.getElementById('newTableContainer').innerHTML = '';
+                
 
                 // Create a new table and populate it with data
-                const newTable = document.createElement('table');
-                newTable.id = 'newTable';
-                newTable.border = '1';
+                const columnsDataElement = document.getElementById("columns-data");
+                const columns = JSON.parse(columnsDataElement.textContent);
 
-                // Add table header
-                const thead = document.createElement('thead');
-                const headerRow = document.createElement('tr');
-                for (const column of Object.keys(data[0])) {
-                    const th = document.createElement('th');
-                    th.innerText = column;
-                    headerRow.appendChild(th);
-                }
-                thead.appendChild(headerRow);
-                newTable.appendChild(thead);
-
-                // Add table body
-                const tbody = document.createElement('tbody');
-                for (const row of data) {
-                    const bodyRow = document.createElement('tr');
-                    for (const column of Object.keys(row)) {
-                        const td = document.createElement('td');
-                        td.innerText = row[column];
-                        bodyRow.appendChild(td);
-                    }
-                    tbody.appendChild(bodyRow);
-                }
-                newTable.appendChild(tbody);
-
-                // Append the new table to the specific container
-                document.getElementById('newTableContainer').appendChild(newTable);
-
+                createTableWithData(data, columns);
             } 
             
             else {
                 document.getElementById("myTable").style.display = "table";
             }
 
-
 });
 
 </script>
+{% endblock %}
+
+{% block scripts %}
+  <script>
+    $(document).ready(function () {
+      $('#myTable').DataTable({
+        "autoWidth": true,
+        "scrollX":true,
+        "fixedHeader":true
+      });
+    });
+  </script>
+
 {% endblock %}
