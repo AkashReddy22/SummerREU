@@ -8,7 +8,7 @@ def select(filter_dict, count=False):
     if count:
         query="""
             SELECT {columns}, COUNT(*) FROM BigTable GROUP BY {columns} {where}
-        """.format(columns=", ".join(condition_dict.keys()), where="" if condition_dict=={} else "WHERE " + " AND ".join([k+"="+v for k,v in condition_dict.items()]))
+        """.format(columns=", ".join(filter_dict.keys()), where="" if condition_dict=={} else "WHERE " + " AND ".join([k+"="+v for k,v in condition_dict.items()]))
         return query
     
     query="""
